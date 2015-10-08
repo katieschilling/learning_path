@@ -1,29 +1,32 @@
 require 'set'
 
+Student = Class.new(OpenStruct)
+
 class LearningPath
-  def initialize(domain_order_file:'./data/domain_order.csv')
-    @test_scores = create_test_score_lookup('./data/student_tests.csv')
-    @domain_order = create_domain_lookup(domain_order_file)
+  def initialize(domain_order_file: './data/domain_order.csv', test_score_file: './data/student_tests.csv')
+    @domain_order_file = domain_order_file
+    @test_score_file   = test_score_file
+
+    validate_domains
   end
 
-  def create_domain_lookup(file)
-    domains = {}
-    CSV.foreach(file) do |row|
-      if valid_domain?(row)
-        domains[row[0]] = row.drop(1)
-      else
-        raise "invalid domain order for test scores"
-      end
+  private
+
+  def domain_order
+    @domain_order ||= CSV.read(@domain_order_file).map { |row| { row.shift => row } }
+  end
+
+  def domains
+    @domains ||= domain_order.map(&:values).flatten.uniq.map(&:downcase).map(&:to_sym)
+  end
+
+  def students
+    @students ||= CSV.table(@test_score_file).entries.map { |row| Student.new(row.to_h) }
+  end
+
+  def validate_domains
+    domains.each do |d|
+      raise "invalid domain #{d} for test scores" unless students.first.to_h.keys.include?(d)
     end
-  end
-
-  def create_test_score_lookup(file)
-    CSV.read(file, headers:true)
-  end
-
-  def valid_domain?(row)
-    domains = Set.new @test_scores.headers
-    row = Set.new row.drop(1)
-    row.subset?(domains)
   end
 end
