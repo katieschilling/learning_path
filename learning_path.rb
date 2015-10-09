@@ -17,12 +17,6 @@ class Student < OpenStruct
   def domain_at(level)
     to_h.select { |_, v| v.to_s == level }.keys
   end
-
-  def lowest_level(levels)
-    levels.each do |level|
-      return level if domain_at(level).any?
-    end
-  end
 end
 
 class LearningPath
@@ -47,6 +41,7 @@ class LearningPath
       order.each do |domain|
         student.domain_at(level).each do |exercise|
           break if path.count == 6
+          next unless domain == exercise
 
           path << "#{level}.#{exercise.to_s.upcase}"
           student.increment(exercise)
