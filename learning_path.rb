@@ -41,8 +41,7 @@ class LearningPath
     student = find_student(name)
     path = [name]
 
-    while path.count < 6
-      level = student.lowest_level(levels)
+    levels.each do |level|
       order = domain_order[level]
 
       order.each do |domain|
